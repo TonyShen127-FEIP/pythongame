@@ -1,0 +1,107 @@
+import pygame
+import random
+
+# Initialize pygame modules for displaying, sound, events, etc.
+pygame.init()
+
+# Set the dimensions of the game window
+WINDOW_WIDTH = 600
+WINDOW_HEIGHT = 400
+snake_block = 10  # Size of each block of the snake
+
+# Create the game window and set its title
+screen = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
+pygame.display.set_caption("Snake Game")
+
+# Initialize the clock for controlling the game FPS
+clock = pygame.time.Clock()
+
+# Define colors for the background, snake, and food
+COLOR_BACKGROUND = (30, 30, 60)  # Dark blue-gray color for background
+COLOR_SNAKE = (0, 255, 128)      # Bright green color for snake
+COLOR_FOOD = (255, 69, 0)        # Bright red color for food
+
+# Initialize the position of the snake and the food
+snake = [[300, 200]]  # Snake starts at position (300, 200)
+# Randomly generate food coordinates within the window, aligned to the grid size (snake_block)
+food_x = random.randint(0, (WINDOW_WIDTH - snake_block) // snake_block) * snake_block
+food_y = random.randint(0, (WINDOW_HEIGHT - snake_block) // snake_block) * snake_block
+food_position = [food_x, food_y]  # Food location ([x, y] format)
+
+# Initialize direction, game state, score, and speed variables
+direction = 'RIGHT'  # Initial movement direction is to the right
+game_over = False     # Game running state
+score = 0             # Start with a score of 0
+speed = 10            # Initial snake speed
+
+# Main game loop
+while not game_over:
+    # Handle events (e.g., key presses or quitting the game)
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:  # Close the game window
+            game_over = True
+        elif event.type == pygame.KEYDOWN:  # Detect key presses for snake movement
+            if event.key == pygame.K_UP and direction != 'DOWN':
+                direction = 'UP'
+            elif event.key == pygame.K_DOWN and direction != 'UP':
+                direction = 'DOWN'
+            elif event.key == pygame.K_LEFT and direction != 'RIGHT':
+                direction = 'LEFT'
+            elif event.key == pygame.K_RIGHT and direction != 'LEFT':
+                direction = 'RIGHT'
+
+    # Update the snake's position based on its current direction
+    if direction == 'UP':
+        snake[0][1] -= snake_block  # Move up by decreasing y-coordinate
+    elif direction == 'DOWN':
+        snake[0][1] += snake_block  # Move down by increasing y-coordinate
+    elif direction == 'LEFT':
+        snake[0][0] -= snake_block  # Move left by decreasing x-coordinate
+    elif direction == 'RIGHT':
+        snake[0][0] += snake_block  # Move right by increasing x-coordinate
+
+    # Check if the snake hits the wall (game over condition)
+    if snake[0][0] < 0 or snake[0][0] >= WINDOW_WIDTH or snake[0][1] < 0 or snake[0][1] >= WINDOW_HEIGHT:
+        game_over = True
+
+    # Check if the snake collides with itself (game over condition)
+    for block in snake[1:]:
+        if snake[0] == block:
+            game_over = True
+
+    # Check if the snake eats the food
+    if snake[0] == food_position:
+        # Generate new food position
+        food_x = random.randint(0, (WINDOW_WIDTH - snake_block) // snake_block) * snake_block
+        food_y = random.randint(0, (WINDOW_HEIGHT - snake_block) // snake_block) * snake_block
+        food_position = [food_x, food_y]
+        # Increase the length of the snake
+        snake.append([0, 0])
+        # Update score and speed
+        score += 1
+        speed += 1
+
+    # Update the position of the snake's body
+    snake.insert(0, list(snake[0]))  # Add the new position to the snake's head
+    snake.pop()  # Remove the last block of the snake to simulate movement
+
+    # Render the game visual elements (background, snake, food)
+    screen.fill(COLOR_BACKGROUND)  # Paint the screen with background color
+    for block in snake:
+        pygame.draw.rect(screen, COLOR_SNAKE, [block[0], block[1], snake_block, snake_block])  # Draw each part of the snake
+    pygame.draw.rect(screen, COLOR_FOOD, [food_position[0], food_position[1], snake_block, snake_block])  # Draw the food
+
+    # Render the score on the screen
+    font = pygame.font.SysFont("arial", 25)  # Define font for score display
+    score_surface = font.render(f"Score: {score}", True, (255, 255, 255))  # White text for score
+    screen.blit(score_surface, (10, 10))  # Place score in the top-left corner
+
+    # Update the game display
+    pygame.display.update()
+    # Control game speed using FPS limit
+    clock.tick(speed)
+
+# Quit pygame after the game loop ends
+pygame.quit()
+# Print the final score in the terminal
+print("Game Over! Your score is:", score)
